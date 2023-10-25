@@ -144,6 +144,19 @@ impl<W: AsyncWrite + Unpin + Send> AsyncArrowWriter<W> {
         Ok(metadata)
     }
 
+    /// Close and finalize the writer.
+    ///
+    /// All the data in the inner buffer will be force flushed.
+    pub async fn close_with_size(mut self) -> Result<(usize, FileMetaData)> {
+        let metadata = self.sync_writer.close_with_size()?;
+
+        // Force to flush the remaining data.
+        Self::try_flush(&mut self.shared_buffer, &mut self.async_writer, 0).await?;
+        self.async_writer.shutdown().await?;
+
+        Ok(metadata)
+    }
+
     /// Flush the data in the [`SharedBuffer`] into the `async_writer` if its size
     /// exceeds the threshold.
     async fn try_flush(

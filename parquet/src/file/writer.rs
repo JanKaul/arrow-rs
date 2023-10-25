@@ -224,6 +224,14 @@ impl<W: Write + Send> SerializedFileWriter<W> {
         Ok(metadata)
     }
 
+    /// Closes and finalises file writer, returning the file metadata and the total file size.
+    pub fn close_with_size(mut self) -> Result<(usize, parquet::FileMetaData)> {
+        self.assert_previous_writer_closed()?;
+        let metadata = self.write_metadata()?;
+        let size = self.buf.bytes_written();
+        Ok((size, metadata))
+    }
+
     /// Writes magic bytes at the beginning of the file.
     fn start_file(buf: &mut TrackedWrite<W>) -> Result<()> {
         buf.write_all(&PARQUET_MAGIC)?;

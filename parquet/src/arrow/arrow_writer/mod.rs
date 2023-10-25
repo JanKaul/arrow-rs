@@ -233,6 +233,12 @@ impl<W: Write + Send> ArrowWriter<W> {
         self.flush()?;
         self.writer.close()
     }
+
+    /// Close and finalize the underlying Parquet writer
+    pub fn close_with_size(mut self) -> Result<(usize, crate::format::FileMetaData)> {
+        self.flush()?;
+        self.writer.close_with_size()
+    }
 }
 
 impl<W: Write + Send> RecordBatchWriter for ArrowWriter<W> {
